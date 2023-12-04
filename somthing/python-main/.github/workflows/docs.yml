@@ -1,0 +1,39 @@
+name: Deploy document
+
+on:
+  push:
+    branches:
+      - main
+    
+jobs:
+  build:
+    name: Deploy document
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+      - name: Build documentation
+        run: |
+          pip3 install -U .[docs]
+          pdoc --html --config show_source_code=False --force voicevox
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ./html/voicevox
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
